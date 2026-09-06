@@ -1,0 +1,10 @@
+{
+  "description": "A SaaS dashboard offering real-time stats, prioritized tasks, activity logs, and community feedback to streamline project management and user engagement.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
