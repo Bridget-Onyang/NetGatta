@@ -323,10 +323,13 @@ function PriorityView({ search }: { search: string }) {
 // ── Activity View ──────────────────────────────────────────────────────────
 
 function ActivityView({ search }: { search: string }) {
+  const [tagFilter, setTagFilter] = useState("All");
   const query = search.trim().toLowerCase();
   const filteredItems = activityItems.filter(item =>
-    !query || [item.user, item.action, item.target, item.tag].some(value => value.toLowerCase().includes(query))
+    (tagFilter === "All" || item.tag === tagFilter) &&
+    (!query || [item.user, item.action, item.target, item.tag].some(value => value.toLowerCase().includes(query)))
   );
+  const activityTags = ["All", ...new Set(activityItems.map(item => item.tag))];
 
   return (
     <div className="space-y-6">
@@ -335,9 +338,19 @@ function ActivityView({ search }: { search: string }) {
           <h1 className="text-2xl font-display font-700 text-[#0F172A] mb-1" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700 }}>Activity Feed</h1>
           <p className="text-sm text-slate-500">Real-time log of NetGatta system events and team actions.</p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-2 bg-[#EFF6FF] border border-blue-200 rounded-lg">
+        <div className="flex items-center gap-3">
+          <select
+            value={tagFilter}
+            onChange={event => setTagFilter(event.target.value)}
+            className="px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="Filter activity by tag"
+          >
+            {activityTags.map(tag => <option key={tag}>{tag}</option>)}
+          </select>
+          <div className="flex items-center gap-2 px-3 py-2 bg-[#EFF6FF] border border-blue-200 rounded-lg">
           <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
           <span className="text-xs font-mono text-blue-700" style={{ fontFamily: "'JetBrains Mono', monospace" }}>LIVE</span>
+          </div>
         </div>
       </div>
 
