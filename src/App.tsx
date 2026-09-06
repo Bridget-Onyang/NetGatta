@@ -229,12 +229,17 @@ function HomeView() {
 
 // ── Priority View ──────────────────────────────────────────────────────────
 
-function PriorityView() {
+function PriorityView({ search }: { search: string }) {
   const [filter, setFilter] = useState<Priority | "All">("All");
 
   const filtered = useMemo(
-    () => filter === "All" ? trafficItems : trafficItems.filter(t => t.priority === filter),
-    [filter]
+    () => trafficItems.filter(item => {
+      const matchesFilter = filter === "All" || item.priority === filter;
+      const query = search.trim().toLowerCase();
+      const matchesSearch = !query || [item.app, item.category, item.action, item.release].some(value => value.toLowerCase().includes(query));
+      return matchesFilter && matchesSearch;
+    }),
+    [filter, search]
   );
   const counts = getPriorityCounts(trafficItems);
 
@@ -317,7 +322,12 @@ function PriorityView() {
 
 // ── Activity View ──────────────────────────────────────────────────────────
 
-function ActivityView() {
+function ActivityView({ search }: { search: string }) {
+  const query = search.trim().toLowerCase();
+  const filteredItems = activityItems.filter(item =>
+    !query || [item.user, item.action, item.target, item.tag].some(value => value.toLowerCase().includes(query))
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
@@ -332,7 +342,7 @@ function ActivityView() {
       </div>
 
       <div className="bg-white border border-slate-200 rounded-lg divide-y divide-slate-100">
-        {activityItems.map(item => (
+        {filteredItems.map(item => (
           <div key={item.id} className="flex items-start gap-4 px-6 py-4 hover:bg-slate-50 transition-colors">
             {/* Avatar */}
             <div
@@ -363,12 +373,16 @@ function ActivityView() {
 
 // ── Feedback View ──────────────────────────────────────────────────────────
 
-function FeedbackView({ repository }: { repository: IdeaRepository }) {
+function FeedbackView({ repository, search }: { repository: IdeaRepository; search: string }) {
   const { ideas, vote, add } = useIdeas(repository);
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [tag, setTag] = useState<FeedbackTag>("UX");
   const [submitted, setSubmitted] = useState(false);
+  const query = search.trim().toLowerCase();
+  const filteredIdeas = ideas.filter(idea =>
+    !query || [idea.title, idea.description, idea.tag, idea.author].some(value => value.toLowerCase().includes(query))
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -440,10 +454,10 @@ function FeedbackView({ repository }: { repository: IdeaRepository }) {
         <div className="lg:col-span-3 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-mono font-500 text-slate-400 uppercase tracking-widest" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Community Ideas</h2>
-            <span className="text-xs font-mono text-slate-400" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{ideas.length} ideas · sorted by votes</span>
+            <span className="text-xs font-mono text-slate-400" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{filteredIdeas.length} ideas · sorted by votes</span>
           </div>
           <div className="space-y-3">
-            {ideas.map((idea, i) => (
+            {filteredIdeas.map((idea, i) => (
               <div key={idea.id} className="bg-white border border-slate-200 rounded-lg p-5 hover:border-blue-200 transition-colors">
                 <div className="flex items-start gap-4">
                   {/* Vote button */}
@@ -658,9 +672,9 @@ export default function App() {
         {/* Scrollable content */}
         <main className="flex-1 overflow-y-auto px-8 py-8">
           {view === "home" && <HomeView />}
-          {view === "priority" && <PriorityView />}
-          {view === "activity" && <ActivityView />}
-          {view === "feedback" && <FeedbackView repository={ideaRepository} />}
+          {view === "priority" && <PriorityView search={search} />}
+          {view === "activity" && <ActivityView search={search} />}
+          {view === "feedback" && <FeedbackView repository={ideaRepository} search={search} />}
         </main>
       </div>
     </div>
